@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OmegaFireflyComponent/OmegaFireflyComponent.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OmegaFireflyComponent.Tests/OmegaFireflyComponent.Tests.csproj" />
+  </Folder>
+</Solution>
