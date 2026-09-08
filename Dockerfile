@@ -5,13 +5,13 @@ COPY NuGet.config .
 COPY packages/ packages/
 COPY src/ src/
 COPY tests/ tests/
-COPY OmegaFireflyComponent.slnx .
+COPY Mamtzetza.slnx .
 
-RUN dotnet restore OmegaFireflyComponent.slnx --configfile NuGet.config
-RUN dotnet publish src/OmegaFireflyComponent/OmegaFireflyComponent.csproj -c Release -o /app/publish --no-restore
+RUN dotnet restore Mamtzetza.slnx --configfile NuGet.config
+RUN dotnet publish src/Mamtzetza/Mamtzetza.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
-ENTRYPOINT ["dotnet", "OmegaFireflyComponent.dll"]
+ENTRYPOINT ["dotnet", "Mamtzetza.dll"]

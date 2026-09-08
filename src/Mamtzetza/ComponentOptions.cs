@@ -1,4 +1,4 @@
-namespace OmegaFireflyComponent;
+namespace Mamtzetza;
 
 public class ComponentOptions
 {

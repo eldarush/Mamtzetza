@@ -1,8 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using OmegaFireflyComponent;
+using Mamtzetza;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -60,7 +59,7 @@ builder.Services.AddHttpClient<IFireflyTransformer, FireflyTransformer>(client =
     client.Timeout = TimeSpan.FromSeconds(5);
 });
 
-builder.Services.AddHostedService<OmegaFireflyWorker>();
+builder.Services.AddHostedService<MamtzetzaWorker>();
 
 var host = builder.Build();
 host.Run();

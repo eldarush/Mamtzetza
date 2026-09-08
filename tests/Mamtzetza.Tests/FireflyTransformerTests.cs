@@ -4,9 +4,10 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using OmegaSolider.Messages;
+using Mamtzetza;
 using Xunit;
 
-namespace OmegaFireflyComponent.Tests;
+namespace Mamtzetza.Tests;
 
 public class FireflyTransformerTests
 {

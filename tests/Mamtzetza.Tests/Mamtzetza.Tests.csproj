@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\OmegaFireflyComponent\OmegaFireflyComponent.csproj" />
+    <ProjectReference Include="..\..\src\Mamtzetza\Mamtzetza.csproj" />
   </ItemGroup>
 
 </Project>

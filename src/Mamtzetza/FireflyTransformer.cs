@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OmegaSolider.Messages;
 
-namespace OmegaFireflyComponent;
+namespace Mamtzetza;
 
 public interface IFireflyTransformer
 {

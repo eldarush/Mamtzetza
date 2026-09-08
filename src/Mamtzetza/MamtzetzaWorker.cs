@@ -5,18 +5,18 @@ using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace OmegaFireflyComponent;
+namespace Mamtzetza;
 
-public class OmegaFireflyWorker : BackgroundService
+public class MamtzetzaWorker : BackgroundService
 {
     private readonly IFireflyTransformer _transformer;
     private readonly ComponentOptions _options;
-    private readonly ILogger<OmegaFireflyWorker> _logger;
+    private readonly ILogger<MamtzetzaWorker> _logger;
 
-    public OmegaFireflyWorker(
+    public MamtzetzaWorker(
         IFireflyTransformer transformer,
         IOptions<ComponentOptions> options,
-        ILogger<OmegaFireflyWorker> logger)
+        ILogger<MamtzetzaWorker> logger)
     {
         _transformer = transformer;
         _options = options.Value;
@@ -25,7 +25,7 @@ public class OmegaFireflyWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Starting OmegaFireflyWorker with RabbitMQ host: {Host}:{Port}", _options.RabbitMqHost, _options.RabbitMqPort);
+        _logger.LogInformation("Starting MamtzetzaWorker with RabbitMQ host: {Host}:{Port}", _options.RabbitMqHost, _options.RabbitMqPort);
 
         var factory = new ConnectionFactory
         {
@@ -130,7 +130,7 @@ public class OmegaFireflyWorker : BackgroundService
             consumer: consumer,
             cancellationToken: stoppingToken);
 
-        _logger.LogInformation("OmegaFireflyWorker is actively consuming from queue {Queue}...", _options.InputQueue);
+        _logger.LogInformation("MamtzetzaWorker is actively consuming from queue {Queue}...", _options.InputQueue);
 
         // Keep running until cancellation
         try

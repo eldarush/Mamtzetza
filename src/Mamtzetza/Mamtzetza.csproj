@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="OmegaFireflyComponent.Tests" />
+    <InternalsVisibleTo Include="Mamtzetza.Tests" />
   </ItemGroup>
 
 </Project>
