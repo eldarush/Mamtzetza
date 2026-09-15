@@ -30,93 +30,7 @@ Mamtzetza is built for high-observability environments, emitting structured JSON
 
 ---
 
-## 2. Input / Output (I/O) Layout
-
-Mamtzetza operates as an event-driven stream processor connecting an incoming RabbitMQ queue to an outgoing RabbitMQ exchange:
-- **Input Flow**: Consumes serialized `OmegaSolider` Protobuf messages from the queue `omega-solider-input-queue` (bound to direct exchange `omega-solider-input`).
-- **Processing & Enrichment**: Computes the 5 derived attributes and base glow metrics from soldier attributes. When `ENABLE_EXTERNAL_API=true`, it calls an external HTTP REST service (HTTP GET for buff attributes and HTTP POST for title generation).
-- **Output Flow**: Publishes the resulting `FireflyExpert` Protobuf message to the direct exchange `firefly-expert-output`.
-
-### Input Specification
-- **Protocol**: AMQP 0-9-1 (RabbitMQ)
-- **Exchange**: `omega-solider-input` (Direct)
-- **Queue**: `omega-solider-input-queue`
-- **Routing Key**: `/` (or default binding)
-- **Serialization**: Google Protocol Buffers (`OmegaSolider.Messages.OmegaSolider`)
-- **Schema**:
-  | Field | Type | Description |
-  | :--- | :--- | :--- |
-  | `soldier_id` | `string` | Unique soldier identifier (e.g. `SOL-001`) |
-  | `name` | `string` | Full name of the soldier |
-  | `rank` | `string` | Military rank (e.g. `Captain`, `General`, `Sergeant`) |
-  | `age` | `int32` | Age of the soldier |
-  | `favorite_food` | `string` | Favorite food (e.g. `Shawarma`, `Spicy Nachos`) |
-  | `favorite_tv_show` | `string` | Favorite TV show (e.g. `Star Trek: TNG`, `The Expanse`) |
-  | `shoe_size` | `float` | European shoe size (e.g. `43.5`) |
-  | `height` | `float` | Height in cm (e.g. `180.0`) |
-  | `weight` | `float` | Weight in kg (e.g. `80.0`) |
-  | `lucky_number` | `int32` | Personal lucky number |
-  | `hobby` | `string` | Hobby (e.g. `Chess`, `Gaming`) |
-  | `origin_planet` | `string` | Home planet (e.g. `Mars`, `Earth`, `Jupiter`) |
-
-### Output Specification
-- **Protocol**: AMQP 0-9-1 (RabbitMQ)
-- **Exchange**: `firefly-expert-output` (Direct)
-- **Serialization**: Google Protocol Buffers (`OmegaSolider.Messages.FireflyExpert`)
-- **Schema**:
-  | Field | Type | Description |
-  | :--- | :--- | :--- |
-  | `soldier_id` | `string` | Identifier matching the input soldier |
-  | `name` | `string` | Preserved soldier name |
-  | `rank` | `string` | Preserved military rank |
-  | `age` | `int32` | Preserved age |
-  | `favorite_food` | `string` | Preserved favorite food |
-  | `favorite_tv_show` | `string` | Preserved favorite TV show |
-  | `shoe_size` | `float` | Preserved shoe size |
-  | `height` | `float` | Preserved height |
-  | `weight` | `float` | Preserved weight |
-  | `lucky_number` | `int32` | Preserved lucky number |
-  | `hobby` | `string` | Preserved hobby |
-  | `origin_planet` | `string` | Preserved origin planet |
-  | `favorite_technology` | `string` | Deterministically derived from `favorite_tv_show` |
-  | `favorite_team` | `string` | Deterministically derived from `origin_planet` |
-  | `favorite_commander` | `string` | Deterministically derived from `rank` |
-  | `favorite_woman` | `string` | Deterministically derived from `lucky_number % 5` |
-  | `favorite_coding_language` | `string` | Deterministically derived from `age` |
-  | `glow_intensity` | `int32` | Computed glow intensity (Base + API bonus) |
-  | `comedic_buff` | `string` | Buff string from API or default fallback |
-  | `processed_at_unix_ms` | `int64` | Processing timestamp in Unix epoch milliseconds |
-
-### External HTTP API Contract (when `ENABLE_EXTERNAL_API=true`)
-1. **GET `/api/v1/buff/{soldierId}`**
-   - **Response**: `application/json`
-     ```json
-     {
-       "soldierId": "SOL-001",
-       "buffName": "Quantum Disco Sparkles",
-       "bonusGlow": 50
-     }
-     ```
-2. **POST `/api/v1/funny-title`**
-   - **Request**: `application/json`
-     ```json
-     {
-       "soldierId": "SOL-001",
-       "name": "John Doe",
-       "favoriteFood": "Shawarma"
-     }
-     ```
-   - **Response**: `application/json`
-     ```json
-     {
-       "title": "Supreme Commander of Shawarma",
-       "funnyLore": "Fights crime with crunch."
-     }
-     ```
-
----
-
-## 3. Configuration
+## 2. Configuration
 
 Configure **Mamtzetza** using environment variables:
 
@@ -135,7 +49,7 @@ Configure **Mamtzetza** using environment variables:
 
 ---
 
-## 4. Installation & Running
+## 3. Installation & Running
 
 ### Option A: Running with Docker
 
