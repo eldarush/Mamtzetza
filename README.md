@@ -23,29 +23,10 @@
 
 ## 2. Input / Output (I/O) Layout
 
-```mermaid
-flowchart LR
-    subgraph Input ["RabbitMQ Input"]
-        InEx["Exchange: omega-solider-input"] --> InQ["Queue: omega-solider-input-queue"]
-    end
-
-    subgraph Service ["Mamtzetza Service"]
-        InQ --> Worker["MamtzetzaWorker"]
-        Worker --> Logic["Transformation Logic"]
-        Logic --> Worker
-    end
-
-    subgraph ExternalAPI ["External HTTP REST API (Optional)"]
-        Logic -.->|GET /api/v1/buff/{soldierId}| ExtBuff["Buff Endpoint"]
-        Logic -.->|POST /api/v1/funny-title| ExtTitle["Title Endpoint"]
-        ExtBuff -.->|Bonus Glow & Buff Name| Logic
-        ExtTitle -.->|Humorous Title| Logic
-    end
-
-    subgraph Output ["RabbitMQ Output"]
-        Worker --> OutEx["Exchange: firefly-expert-output"]
-    end
-```
+Mamtzetza operates as an event-driven stream processor connecting an incoming RabbitMQ queue to an outgoing RabbitMQ exchange:
+- **Input Flow**: Consumes serialized `OmegaSolider` Protobuf messages from the queue `omega-solider-input-queue` (bound to direct exchange `omega-solider-input`).
+- **Processing & Enrichment**: Calculates base glow metrics from soldier rank and bravery points. When `ENABLE_EXTERNAL_API=true`, it calls an external HTTP REST service (HTTP GET for buff attributes and HTTP POST for title generation) to further augment the soldier payload.
+- **Output Flow**: Publishes the resulting `FireflyExpert` Protobuf message to the direct exchange `firefly-expert-output`.
 
 ### Input Specification
 - **Protocol**: AMQP 0-9-1 (RabbitMQ)
