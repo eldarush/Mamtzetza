@@ -19,6 +19,13 @@ public record ExternalTitleRequest
     [JsonPropertyName("soldierId")]
     public string SoldierId { get; init; } = string.Empty;
 
+    [JsonPropertyName("name")]
+    public string Name { get; init; } = string.Empty;
+
+    [JsonPropertyName("favoriteFood")]
+    public string FavoriteFood { get; init; } = string.Empty;
+
+    // Backward compatibility aliases
     [JsonPropertyName("codename")]
     public string Codename { get; init; } = string.Empty;
 

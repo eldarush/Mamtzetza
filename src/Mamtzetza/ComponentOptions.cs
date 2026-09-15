@@ -18,4 +18,5 @@ public class ComponentOptions
 
     public bool EnableExternalApi { get; set; } = false;
     public string ExternalApiBaseUrl { get; set; } = "http://127.0.0.1:8080";
+    public int MetricsPort { get; set; } = 9090;
 }

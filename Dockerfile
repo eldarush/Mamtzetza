@@ -14,4 +14,6 @@ FROM mcr.microsoft.com/dotnet/runtime:10.0
 WORKDIR /app
 COPY --from=build /app/publish .
 
+EXPOSE 9090
+
 ENTRYPOINT ["dotnet", "Mamtzetza.dll"]

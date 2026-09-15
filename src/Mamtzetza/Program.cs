@@ -1,9 +1,20 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Mamtzetza;
+using Prometheus;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+// Configure Structured JSON Logging for Fluentd, Fluent Bit, and Elasticsearch
+builder.Logging.ClearProviders();
+builder.Logging.AddJsonConsole(options =>
+{
+    options.IncludeScopes = true;
+    options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ ";
+    options.JsonWriterOptions = new System.Text.Json.JsonWriterOptions { Indented = false };
+});
 
 builder.Configuration.AddEnvironmentVariables();
 
@@ -38,6 +49,9 @@ if (Environment.GetEnvironmentVariable("ENABLE_EXTERNAL_API") is { Length: > 0 }
 if (Environment.GetEnvironmentVariable("EXTERNAL_API_BASE_URL") is { Length: > 0 } apiUrl)
     componentOptions.ExternalApiBaseUrl = apiUrl;
 
+if (Environment.GetEnvironmentVariable("METRICS_PORT") is { Length: > 0 } metricsPortStr && int.TryParse(metricsPortStr, out var metricsPort))
+    componentOptions.MetricsPort = metricsPort;
+
 builder.Services.Configure<ComponentOptions>(options =>
 {
     options.RabbitMqHost = componentOptions.RabbitMqHost;
@@ -51,6 +65,7 @@ builder.Services.Configure<ComponentOptions>(options =>
     options.OutputRoutingKey = componentOptions.OutputRoutingKey;
     options.EnableExternalApi = componentOptions.EnableExternalApi;
     options.ExternalApiBaseUrl = componentOptions.ExternalApiBaseUrl;
+    options.MetricsPort = componentOptions.MetricsPort;
 });
 
 builder.Services.AddHttpClient<IFireflyTransformer, FireflyTransformer>(client =>
@@ -60,6 +75,10 @@ builder.Services.AddHttpClient<IFireflyTransformer, FireflyTransformer>(client =
 });
 
 builder.Services.AddHostedService<MamtzetzaWorker>();
+
+// Start Prometheus metrics HTTP server (exposes /metrics)
+var metricServer = new MetricServer(port: componentOptions.MetricsPort);
+metricServer.Start();
 
 var host = builder.Build();
 host.Run();

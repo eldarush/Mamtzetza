@@ -93,8 +93,9 @@ public class MamtzetzaWorker : BackgroundService
         {
             try
             {
+                MamtzetzaMetrics.MessagesReceivedTotal.Inc();
                 var inputSoldier = OmegaSolider.Messages.OmegaSolider.Parser.ParseFrom(ea.Body.ToArray());
-                _logger.LogInformation("Received message: SoldierId={SoldierId}", inputSoldier.SoldierId);
+                _logger.LogInformation("Received message: SoldierId={SoldierId}, Name={Name}", inputSoldier.SoldierId, inputSoldier.Name);
 
                 var outputFirefly = await _transformer.TransformAsync(inputSoldier, stoppingToken);
                 var outputBytes = outputFirefly.ToByteArray();
@@ -112,6 +113,7 @@ public class MamtzetzaWorker : BackgroundService
                     body: outputBytes,
                     cancellationToken: stoppingToken);
 
+                MamtzetzaMetrics.MessagesProcessedTotal.Inc();
                 _logger.LogInformation("Published transformed FireflyExpert: SoldierId={SoldierId}, Glow={Glow}",
                     outputFirefly.SoldierId, outputFirefly.GlowIntensity);
 
@@ -119,6 +121,7 @@ public class MamtzetzaWorker : BackgroundService
             }
             catch (Exception ex)
             {
+                MamtzetzaMetrics.MessageProcessingErrorsTotal.Inc();
                 _logger.LogError(ex, "Error processing incoming message.");
                 await channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false, cancellationToken: stoppingToken);
             }

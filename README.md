@@ -2,22 +2,31 @@
 
 **Mamtzetza** is an event-driven worker microservice built on .NET 10. It consumes Protobuf military soldier records from a RabbitMQ input queue, transforms and enriches them into elite firefly expert units, and publishes the resulting Protobuf records to a RabbitMQ output exchange. When enabled via a feature flag, it queries an external HTTP REST API to apply comedic buffs and titles.
 
+Mamtzetza is built for high-observability environments, emitting structured JSON logs for Fluentd/Fluent Bit/Elasticsearch and exposing Prometheus metrics at `/metrics`.
+
 ---
 
 ## 1. What It Does
 
 1. **Consumes Messages**: Listens to an incoming RabbitMQ queue for serialized `OmegaSolider` Protobuf messages.
-2. **Computes Transformation**:
-   - Base Glow Intensity: $\text{RankLevel} \times 10 + \text{BraveryPoints} \times 2$.
-   - Expertise: `"Expert in {FavoriteSnack} Logistics"`.
-   - Secret Mission: `"Operation Glow-{SoldierId}"`.
+2. **Computes Deterministic Transformations**:
+   - **`favorite_technology`**: Derived from `favorite_tv_show` (e.g. Star Trek/Wars -> `"Antimatter Warp Core"`, Expanse -> `"Epstein Fusion Drive"`, Matrix -> `"Neural Direct Link"`, Doctor Who -> `"TARDIS Chrono-Engine"`, Cyberpunk -> `"Sandevistan Neural Implant"`).
+   - **`favorite_team`**: Derived from `origin_planet` (e.g. Mars -> `"Martian Dust Devils"`, Earth -> `"Terran Cyber Knights"`, Jupiter -> `"Great Red Spot Cyclones"`).
+   - **`favorite_commander`**: Derived from `rank` (e.g. General/Commander -> `"General Kenobi"`, Captain -> `"Captain Jean-Luc Picard"`, Sergeant/Major -> `"Sergeant Avery Johnson"`).
+   - **`favorite_woman`**: Derived from `lucky_number % 5` (0 -> `"Ada Lovelace"`, 1 -> `"Marie Curie"`, 2 -> `"Grace Hopper"`, 3 -> `"Margaret Hamilton"`, 4 -> `"Hedy Lamarr"`).
+   - **`favorite_coding_language`**: Derived from `age` (<25 -> `"Rust"`, 25-34 -> `"C#"`, 35-44 -> `"Python"`, 45-54 -> `"C++"`, >=55 -> `"LISP"`).
+   - **`glow_intensity`**: `(int)(height + weight * 0.5f) + (|lucky_number| % 10) + bonusGlow`.
 3. **Optional External API Enrichment** (controlled by `ENABLE_EXTERNAL_API`):
-   - When **disabled** (`false`): Comedic buff is set to `"Unbuffed Normal Firefly (No API)"`.
+   - When **disabled** (`false`): Comedic buff is set to `"Unbuffed Normal Firefly (No API)"` and `bonusGlow = 0`.
    - When **enabled** (`true`):
-     - Calls `GET /api/v1/buff/{soldierId}` to obtain a randomized RPG buff and bonus glow points.
-     - Calls `POST /api/v1/funny-title` with soldier metadata to obtain a customized humorous title.
+     - Calls `GET /api/v1/buff/{soldierId}` to obtain an RPG buff and bonus glow points.
+     - Calls `POST /api/v1/funny-title` with soldier metadata to obtain a humorous title.
      - Glow Intensity is incremented by `bonusGlow`, and Comedic Buff is formatted as `"{buffName} - {title}"`.
+     - In case of API failure, gracefully falls back to `"API Error Fallback: {message}"`.
 4. **Publishes Results**: Emits serialized `FireflyExpert` Protobuf messages to the destination exchange.
+5. **Observability**:
+   - Structured JSON logs printed to stdout (easily ingested by Fluent Bit / Fluentd and forwarded to Elasticsearch).
+   - Prometheus metrics server running on port `9090` (or `METRICS_PORT`), exposing counters and processing duration histograms.
 
 ---
 
@@ -25,7 +34,7 @@
 
 Mamtzetza operates as an event-driven stream processor connecting an incoming RabbitMQ queue to an outgoing RabbitMQ exchange:
 - **Input Flow**: Consumes serialized `OmegaSolider` Protobuf messages from the queue `omega-solider-input-queue` (bound to direct exchange `omega-solider-input`).
-- **Processing & Enrichment**: Calculates base glow metrics from soldier rank and bravery points. When `ENABLE_EXTERNAL_API=true`, it calls an external HTTP REST service (HTTP GET for buff attributes and HTTP POST for title generation) to further augment the soldier payload.
+- **Processing & Enrichment**: Computes the 5 derived attributes and base glow metrics from soldier attributes. When `ENABLE_EXTERNAL_API=true`, it calls an external HTTP REST service (HTTP GET for buff attributes and HTTP POST for title generation).
 - **Output Flow**: Publishes the resulting `FireflyExpert` Protobuf message to the direct exchange `firefly-expert-output`.
 
 ### Input Specification
@@ -38,10 +47,17 @@ Mamtzetza operates as an event-driven stream processor connecting an incoming Ra
   | Field | Type | Description |
   | :--- | :--- | :--- |
   | `soldier_id` | `string` | Unique soldier identifier (e.g. `SOL-001`) |
-  | `codename` | `string` | Soldier codename |
-  | `rank_level` | `int32` | Rank level (1 to 10) |
-  | `bravery_points` | `int32` | Bravery points earned (0 to 100) |
-  | `favorite_snack` | `string` | Fuel of choice (e.g. `Quantum Doritos`) |
+  | `name` | `string` | Full name of the soldier |
+  | `rank` | `string` | Military rank (e.g. `Captain`, `General`, `Sergeant`) |
+  | `age` | `int32` | Age of the soldier |
+  | `favorite_food` | `string` | Favorite food (e.g. `Shawarma`, `Spicy Nachos`) |
+  | `favorite_tv_show` | `string` | Favorite TV show (e.g. `Star Trek: TNG`, `The Expanse`) |
+  | `shoe_size` | `float` | European shoe size (e.g. `43.5`) |
+  | `height` | `float` | Height in cm (e.g. `180.0`) |
+  | `weight` | `float` | Weight in kg (e.g. `80.0`) |
+  | `lucky_number` | `int32` | Personal lucky number |
+  | `hobby` | `string` | Hobby (e.g. `Chess`, `Gaming`) |
+  | `origin_planet` | `string` | Home planet (e.g. `Mars`, `Earth`, `Jupiter`) |
 
 ### Output Specification
 - **Protocol**: AMQP 0-9-1 (RabbitMQ)
@@ -51,12 +67,24 @@ Mamtzetza operates as an event-driven stream processor connecting an incoming Ra
   | Field | Type | Description |
   | :--- | :--- | :--- |
   | `soldier_id` | `string` | Identifier matching the input soldier |
-  | `codename` | `string` | Preserved codename |
-  | `rank_level` | `int32` | Preserved rank level |
+  | `name` | `string` | Preserved soldier name |
+  | `rank` | `string` | Preserved military rank |
+  | `age` | `int32` | Preserved age |
+  | `favorite_food` | `string` | Preserved favorite food |
+  | `favorite_tv_show` | `string` | Preserved favorite TV show |
+  | `shoe_size` | `float` | Preserved shoe size |
+  | `height` | `float` | Preserved height |
+  | `weight` | `float` | Preserved weight |
+  | `lucky_number` | `int32` | Preserved lucky number |
+  | `hobby` | `string` | Preserved hobby |
+  | `origin_planet` | `string` | Preserved origin planet |
+  | `favorite_technology` | `string` | Deterministically derived from `favorite_tv_show` |
+  | `favorite_team` | `string` | Deterministically derived from `origin_planet` |
+  | `favorite_commander` | `string` | Deterministically derived from `rank` |
+  | `favorite_woman` | `string` | Deterministically derived from `lucky_number % 5` |
+  | `favorite_coding_language` | `string` | Deterministically derived from `age` |
   | `glow_intensity` | `int32` | Computed glow intensity (Base + API bonus) |
-  | `expertise` | `string` | `"Expert in {favorite_snack} Logistics"` |
   | `comedic_buff` | `string` | Buff string from API or default fallback |
-  | `secret_mission` | `string` | `"Operation Glow-{soldier_id}"` |
   | `processed_at_unix_ms` | `int64` | Processing timestamp in Unix epoch milliseconds |
 
 ### External HTTP API Contract (when `ENABLE_EXTERNAL_API=true`)
@@ -74,14 +102,14 @@ Mamtzetza operates as an event-driven stream processor connecting an incoming Ra
      ```json
      {
        "soldierId": "SOL-001",
-       "codename": "Sparky",
-       "favoriteSnack": "Quantum Doritos"
+       "name": "John Doe",
+       "favoriteFood": "Shawarma"
      }
      ```
    - **Response**: `application/json`
      ```json
      {
-       "title": "Supreme Commander of Quantum Doritos",
+       "title": "Supreme Commander of Shawarma",
        "funnyLore": "Fights crime with crunch."
      }
      ```
@@ -103,6 +131,7 @@ Configure **Mamtzetza** using environment variables:
 | `OUTPUT_EXCHANGE` | `string` | `firefly-expert-output` | Destination exchange for processed messages |
 | `ENABLE_EXTERNAL_API` | `bool` | `false` | Feature flag toggling HTTP REST API enrichment |
 | `EXTERNAL_API_BASE_URL` | `string` | `http://127.0.0.1:8080` | Base URL of the external REST API |
+| `METRICS_PORT` | `int` | `9090` | HTTP port for Prometheus metrics scrape endpoint (`/metrics`) |
 
 ---
 
@@ -119,12 +148,14 @@ Configure **Mamtzetza** using environment variables:
    ```bash
    docker run -d \
      --name mamtzetza \
+     -p 9090:9090 \
      -e RABBITMQ_HOST=rabbitmq \
      -e RABBITMQ_PORT=5672 \
      -e RABBITMQ_USERNAME=admin \
      -e RABBITMQ_PASSWORD=admin \
      -e ENABLE_EXTERNAL_API=true \
      -e EXTERNAL_API_BASE_URL=http://mocker:8080 \
+     -e METRICS_PORT=9090 \
      mamtzetza:latest
    ```
 
@@ -135,6 +166,8 @@ services:
   mamtzetza:
     image: mamtzetza:latest
     build: .
+    ports:
+      - "9090:9090"
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
@@ -145,6 +178,7 @@ services:
       OUTPUT_EXCHANGE: firefly-expert-output
       ENABLE_EXTERNAL_API: "true"
       EXTERNAL_API_BASE_URL: http://mocker:8080
+      METRICS_PORT: 9090
     depends_on:
       rabbitmq:
         condition: service_healthy

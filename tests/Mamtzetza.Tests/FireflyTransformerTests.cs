@@ -12,7 +12,7 @@ namespace Mamtzetza.Tests;
 public class FireflyTransformerTests
 {
     [Fact]
-    public async Task TransformAsync_WhenApiDisabled_ReturnsUnbuffedFireflyExpert()
+    public async Task TransformAsync_WhenApiDisabled_ComputesAllFieldsAndUnbuffedFirefly()
     {
         // Arrange
         var options = Options.Create(new ComponentOptions
@@ -28,10 +28,17 @@ public class FireflyTransformerTests
         var input = new OmegaSolider.Messages.OmegaSolider
         {
             SoldierId = "SOL-001",
-            Codename = "Sparky",
-            RankLevel = 3,
-            BraveryPoints = 15,
-            FavoriteSnack = "Quantum Doritos"
+            Name = "John Doe",
+            Rank = "Captain",
+            Age = 32,
+            FavoriteFood = "Shawarma",
+            FavoriteTvShow = "Star Trek: TNG",
+            ShoeSize = 43.5f,
+            Height = 180.0f,
+            Weight = 80.0f,
+            LuckyNumber = 7, // 7 % 5 = 2 => Grace Hopper
+            Hobby = "Chess",
+            OriginPlanet = "Mars"
         };
 
         // Act
@@ -40,12 +47,28 @@ public class FireflyTransformerTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("SOL-001", result.SoldierId);
-        Assert.Equal("Sparky", result.Codename);
-        Assert.Equal(3, result.RankLevel);
-        Assert.Equal(3 * 10 + 15 * 2, result.GlowIntensity); // 60
-        Assert.Equal("Expert in Quantum Doritos Logistics", result.Expertise);
+        Assert.Equal("John Doe", result.Name);
+        Assert.Equal("Captain", result.Rank);
+        Assert.Equal(32, result.Age);
+        Assert.Equal("Shawarma", result.FavoriteFood);
+        Assert.Equal("Star Trek: TNG", result.FavoriteTvShow);
+        Assert.Equal(43.5f, result.ShoeSize);
+        Assert.Equal(180.0f, result.Height);
+        Assert.Equal(80.0f, result.Weight);
+        Assert.Equal(7, result.LuckyNumber);
+        Assert.Equal("Chess", result.Hobby);
+        Assert.Equal("Mars", result.OriginPlanet);
+
+        // Deterministic fields:
+        Assert.Equal("Antimatter Warp Core", result.FavoriteTechnology); // From Star Trek
+        Assert.Equal("Martian Dust Devils", result.FavoriteTeam);        // From Mars
+        Assert.Equal("Captain Jean-Luc Picard", result.FavoriteCommander); // From Captain
+        Assert.Equal("Grace Hopper", result.FavoriteWoman);              // 7 % 5 = 2
+        Assert.Equal("C#", result.FavoriteCodingLanguage);               // Age 32 => C#
+
+        // Glow: (int)(180 + 80 * 0.5) + (7 % 10) + 0 = 220 + 7 = 227
+        Assert.Equal(227, result.GlowIntensity);
         Assert.Equal("Unbuffed Normal Firefly (No API)", result.ComedicBuff);
-        Assert.Equal("Operation Glow-SOL-001", result.SecretMission);
         Assert.True(result.ProcessedAtUnixMs > 0);
     }
 
@@ -97,10 +120,17 @@ public class FireflyTransformerTests
         var input = new OmegaSolider.Messages.OmegaSolider
         {
             SoldierId = "SOL-002",
-            Codename = "Blaze",
-            RankLevel = 4,
-            BraveryPoints = 20,
-            FavoriteSnack = "Spicy Nachos"
+            Name = "Blaze Fire",
+            Rank = "General",
+            Age = 22,
+            FavoriteFood = "Spicy Nachos",
+            FavoriteTvShow = "The Expanse",
+            ShoeSize = 44.0f,
+            Height = 190.0f,
+            Weight = 90.0f,
+            LuckyNumber = 10, // 10 % 5 = 0 => Ada Lovelace
+            Hobby = "Gaming",
+            OriginPlanet = "Earth"
         };
 
         // Act
@@ -109,12 +139,15 @@ public class FireflyTransformerTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal("SOL-002", result.SoldierId);
-        Assert.Equal("Blaze", result.Codename);
-        // Base glow = 4 * 10 + 20 * 2 = 80; Bonus glow = 75 => Total = 155
-        Assert.Equal(155, result.GlowIntensity);
-        Assert.Equal("Expert in Spicy Nachos Logistics", result.Expertise);
+        Assert.Equal("Epstein Fusion Drive", result.FavoriteTechnology);
+        Assert.Equal("Terran Cyber Knights", result.FavoriteTeam);
+        Assert.Equal("General Kenobi", result.FavoriteCommander);
+        Assert.Equal("Ada Lovelace", result.FavoriteWoman);
+        Assert.Equal("Rust", result.FavoriteCodingLanguage); // Age 22 => Rust
+
+        // Base glow: (int)(190 + 90 * 0.5) + (10 % 10) = 235; Bonus glow: 75 => Total: 310
+        Assert.Equal(310, result.GlowIntensity);
         Assert.Equal("Supernova Glow - Grand Master of Spicy Nachos", result.ComedicBuff);
-        Assert.Equal("Operation Glow-SOL-002", result.SecretMission);
     }
 
     private class MockHttpMessageHandler : HttpMessageHandler
