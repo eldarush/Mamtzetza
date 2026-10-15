@@ -1,5 +1,21 @@
 # Mamtzetza
 
+## Onboarding verification and capture
+
+Use SDK **10.0.203** (`global.json`) and the coordinated five-day package for exact commits and setup. The [reference QaaS suite](https://github.com/eldarush/mamtzetza-qaas-tests) must be a sibling directory and its default E2E scenario requires `ENABLE_EXTERNAL_API=true`; the worker's local default remains false.
+
+`LOG_FILE_PATH` optionally duplicates actual stdout to a flushed JSON-lines file, truncating it on each worker start. The suite mounts this file into its runner and optional Fluent Bit tail input. Console timestamps use UTC. The capture path's parent is created automatically; no fabricated sample logs are used for validation. Without a configured collector input or shared file, stdout is not automatically forwarded to Elasticsearch.
+
+Regression tests cover API disabled/success/GET failure/POST failure, caller cancellation, age boundaries 24/25, 34/35, 44/45, 54/55, and the full signed int32 lucky-number domain edge. Cancellation propagates rather than creating a fallback publication. API failures keep the base glow. `mamtzetza_external_api_calls_total` counts enrichment attempts per soldier (a successful attempt comprises two HTTP requests), not individual requests.
+
+```powershell
+dotnet restore Mamtzetza.slnx --configfile NuGet.config
+dotnet build Mamtzetza.slnx --no-restore -c Release
+dotnet test Mamtzetza.slnx --no-build -c Release --logger trx
+```
+
+The full observability stack is configured in the sibling tests repository's `observability/` directory. It is optional for the five-day path. No QaaS Framework/Runner release is required for these application and custom test changes. A framework ownership path would require additional training and release review.
+
 **Mamtzetza** is an event-driven worker microservice built on .NET 10. It consumes Protobuf military soldier records from a RabbitMQ input queue, transforms and enriches them into elite firefly expert units, and publishes the resulting Protobuf records to a RabbitMQ output exchange. When enabled via a feature flag, it queries an external HTTP REST API to apply comedic buffs and titles.
 
 Mamtzetza is built for high-observability environments, emitting structured JSON logs for Fluentd/Fluent Bit/Elasticsearch and exposing Prometheus metrics at `/metrics`.

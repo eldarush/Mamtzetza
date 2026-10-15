@@ -18,7 +18,7 @@ public static class MamtzetzaMetrics
 
     public static readonly Counter ExternalApiCallsTotal = Metrics.CreateCounter(
         "mamtzetza_external_api_calls_total",
-        "Total number of external enrichment API calls made.",
+        "Total enrichment attempts (one per soldier, comprising GET and POST on success).",
         new[] { "status" });
 
     public static readonly Histogram ProcessingDurationSeconds = Metrics.CreateHistogram(

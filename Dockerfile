@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.203 AS build
 WORKDIR /src
 
 COPY NuGet.config .
@@ -10,7 +10,7 @@ COPY Mamtzetza.slnx .
 RUN dotnet restore Mamtzetza.slnx --configfile NuGet.config
 RUN dotnet publish src/Mamtzetza/Mamtzetza.csproj -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/runtime:10.0
+FROM mcr.microsoft.com/dotnet/runtime:10.0.7
 WORKDIR /app
 COPY --from=build /app/publish .
 

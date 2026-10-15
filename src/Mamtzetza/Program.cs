@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Mamtzetza;
 using Prometheus;
 
+// Capture the actual console stream for isolated QaaS runs and optional Fluent Bit tailing.
+using var capture = StdoutCapture.Install(Environment.GetEnvironmentVariable("LOG_FILE_PATH"));
 var builder = Host.CreateApplicationBuilder(args);
 
 // Configure Structured JSON Logging for Fluentd, Fluent Bit, and Elasticsearch
@@ -12,6 +14,7 @@ builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole(options =>
 {
     options.IncludeScopes = true;
+    options.UseUtcTimestamp = true;
     options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ ";
     options.JsonWriterOptions = new System.Text.Json.JsonWriterOptions { Indented = false };
 });
