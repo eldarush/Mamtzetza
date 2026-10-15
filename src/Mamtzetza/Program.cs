@@ -80,6 +80,8 @@ builder.Services.AddHttpClient<IFireflyTransformer, FireflyTransformer>(client =
 builder.Services.AddHostedService<MamtzetzaWorker>();
 
 // Start Prometheus metrics HTTP server (exposes /metrics)
+// Register unlabelled worker metrics before the first scrape, including an empty-batch baseline.
+MamtzetzaMetrics.MessagesReceivedTotal.Inc(0);
 var metricServer = new MetricServer(port: componentOptions.MetricsPort);
 metricServer.Start();
 
