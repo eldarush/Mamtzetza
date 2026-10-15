@@ -7,7 +7,7 @@ COPY src/ src/
 COPY tests/ tests/
 COPY Mamtzetza.slnx .
 
-RUN dotnet restore Mamtzetza.slnx --configfile NuGet.config
+RUN dotnet restore Mamtzetza.slnx --configfile NuGet.config --locked-mode
 RUN dotnet publish src/Mamtzetza/Mamtzetza.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0.7
