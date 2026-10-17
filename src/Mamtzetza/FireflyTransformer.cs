@@ -57,7 +57,7 @@ public class FireflyTransformer : IFireflyTransformer
                     FavoriteSnack = input.FavoriteFood
                 };
 
-                var postResponse = await _httpClient.PostAsJsonAsync("/api/v1/funny-title", titleRequest, cancellationToken);
+                using var postResponse = await _httpClient.PostAsJsonAsync("/api/v1/funny-title", titleRequest, cancellationToken);
                 postResponse.EnsureSuccessStatusCode();
 
                 var titleResponse = await postResponse.Content.ReadFromJsonAsync<ExternalTitleResponse>(cancellationToken: cancellationToken);
@@ -72,6 +72,10 @@ public class FireflyTransformer : IFireflyTransformer
                 _logger.LogInformation("Successfully enriched soldier {SoldierId}: Buff='{BuffName}', BonusGlow={BonusGlow}, Title='{Title}'",
                     input.SoldierId, buffName, bonusGlow, title);
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 MamtzetzaMetrics.ExternalApiCallsTotal.WithLabels("failure").Inc();
@@ -80,7 +84,7 @@ public class FireflyTransformer : IFireflyTransformer
             }
         }
 
-        int calculatedGlow = (int)(input.Height + (input.Weight * 0.5f)) + (Math.Abs(input.LuckyNumber) % 10) + bonusGlow;
+        int calculatedGlow = (int)(input.Height + (input.Weight * 0.5f)) + (int)(Math.Abs((long)input.LuckyNumber) % 10) + bonusGlow;
 
         var firefly = new FireflyExpert
         {
@@ -161,7 +165,7 @@ public class FireflyTransformer : IFireflyTransformer
 
     public static string CalculateFavoriteWoman(int luckyNumber)
     {
-        return (Math.Abs(luckyNumber) % 5) switch
+        return (Math.Abs((long)luckyNumber) % 5) switch
         {
             0 => "Ada Lovelace",
             1 => "Marie Curie",
